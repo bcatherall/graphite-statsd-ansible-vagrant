@@ -1,3 +1,50 @@
+# Forked from https://github.com/DandyDev/graphite-statsd-ansible-vagrant
+This adds an EC2 deployment script for installing to AWS. The script that this was forked from has a solid setup for Graphite/Statd, and the choices made for what services to install makes it easy to scale if needed. 
+
+It uses Postgres for the data store, if this becomes a bottleneck it can easily be migrated to RDS. 
+
+It also uses memcached which can be migrated to ElasiCache.
+
+In addition to the Docs below Several additional things had to be setup to make this work. 
+
+## Running the EC2 deploy
+ansible-playbook -i local ec2.yml
+
+## Configuring the Script
+There are several options in the ec2.yml that may need to be adjusted.
+####image: ami-b08b6cd8 
+This is Ubuntu 12.04 LTS base install from us-east-1. https://cloud-images.ubuntu.com/locator/ec2/ lists other Ubuntu images.
+####keypair: aws-key
+This is the key pair that the new instance will setup for connection via SSH. It needs already be setup in your EC2 configuration. 
+####instance_type: t1.micro
+This the smallest available instance, and may not have enough resources.
+
+## SSH
+If you have multiple SSH keys to manage, there is an environment variable to tell Ansible which one to use. 
+
+export ANSIBLE_SSH_ARGS="-i /Users/<username>/.ssh/aws-key.pem"
+
+## AWS environment variables to set up
+
+export EC2_REGION=us-east-1
+
+~/.aws/credentials
+[Credentials]
+aws_access_key_id = <aws key>
+aws_secret_access_key = <aws secret>
+
+The Key and secret could also be setup using the following Environment Variables:
+
+AWS_ACCESS_KEY_ID
+AWS_SECRET_ACCESS_KEY
+
+## Boto
+Sometimes on OSX it can be difficult to get the correct python setup to work. Boto was giving me issues with finding its config file. Setting it's environment variable fixed the issue.
+
+export BOTO_CONFIG=~/.boto 
+
+# The rest of this document is from the original script
+
 # Graphite & StatsD with Ansible
 
 NOTE: If you want an even more complete monitoring solution that includes [Sentry](http://getsentry.com), the error logging tool, take a look at [Statserver](https://github.com/DandyDev/statserver)
