@@ -14,9 +14,10 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     graphite.vm.box_url = "http://files.vagrantup.com/precise32.box"
     graphite.vm.network :private_network, ip: "192.168.33.20"
 
-    graphite.vm.provision "ansible" do |ansible| 
+    graphite.vm.provision "ansible" do |ansible|
+      ansible.verbose = "v"
       ansible.playbook = "graphite.yml"
-    end 
+    end
   end
 
   config.vm.provider "virtualbox" do |v|

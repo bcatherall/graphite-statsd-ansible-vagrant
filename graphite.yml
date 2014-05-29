@@ -3,11 +3,11 @@
   vars:
     graphite:
       version: master
-      timezone: Europe/Paris
+      timezone: America/New_York
       workers: 4
       host: 0.0.0.0
       server: graphite.local
-      secret_key: 'ob3sow^ik#4q(k5*tgw&6j+osyr^@0jus$yd+-#^&^d#%yim1!'
+      secret_key: 'statsd_j^!rt)5f-3l*wb#-jt+-$#p99^cf$5y4^k1)k@hopsjuvj%7'
     carbon:
       host: 0.0.0.0
       ssl: no

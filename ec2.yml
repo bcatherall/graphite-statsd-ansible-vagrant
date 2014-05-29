@@ -1,0 +1,80 @@
+# The main things to customize here are the following:
+#     Names for security group, instance, ans host group
+#     The Base AMI to use
+#     The keypair to use
+#     The instance type. This is currently set to the free tier
+
+- name: Spin up some EC2 instances
+  hosts: 127.0.0.1
+  connection: local
+  tasks:
+    - name: Create security group
+      local_action:
+        module: ec2_group
+        name: statsd-security-group
+        description: Access statsd-security-group
+        rules:
+          - proto: tcp
+            from_port: 22
+            to_port: 22
+            cidr_ip: 0.0.0.0/0
+          - proto: http
+            from_port: 80
+            to_port: 80
+            cidr_ip: 0.0.0.0/0
+
+    - name: Launch instances
+      local_action:
+        module: ec2
+        keypair: aws-key
+        group: statsd-security-group
+        instance_type: t1.micro
+        image: ami-b08b6cd8
+        count: 1
+        wait: yes
+      register: ec2
+    # More Base AMIs for Ubuntu can be found here: https://cloud-images.ubuntu.com/locator/ec2/
+
+    - name: Add instances to host group
+      local_action: add_host hostname={{item.public_ip}} groupname=statsd-security-group
+      with_items: ec2.instances
+
+    - name: Wait for SSH to be available
+      wait_for:
+        state: started
+        host: "{{item.public_dns_name}}"
+        port: 22
+      with_items: ec2.instances
+
+    - name: Breathing room #(Ansible uses python apt has issues running directly after boot)
+      pause: seconds=15
+
+- name: Install Graphite and Statsd
+  hosts: statsd-security-group
+  user: ubuntu
+  sudo: True
+  vars:
+    graphite:
+      version: master
+      timezone: America/New_York
+      workers: 4
+      host: 0.0.0.0
+      server: graphite.local
+      secret_key: 'statsd_j^!rt)5f-3l*wb#-jt+-$#p99^cf$5y4^k1)k@hopsjuvj%7'
+    carbon:
+      host: 0.0.0.0
+      ssl: no
+    db_graphite:
+      name: graphite
+      user: graphite
+      password: graphite
+  roles:
+    - common
+    - python
+    - supervisor
+    - role: nginx
+      nginx_sites: none
+    - postgres
+    - graphite
+    - nodejs
+    - statsd
